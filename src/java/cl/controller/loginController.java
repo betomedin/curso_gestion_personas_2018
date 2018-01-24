@@ -102,6 +102,7 @@ public class loginController extends HttpServlet {
         String activo = request.getParameter("activo");       
                 
         service.editar(rut, activo.equalsIgnoreCase("si"));
+        request.getRequestDispatcher("usuarios.jsp").forward(request, response);
     }
     
     protected void modificarForm(HttpServletRequest request, HttpServletResponse response)

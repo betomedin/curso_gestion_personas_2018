@@ -37,7 +37,7 @@
                     <input type="password" name="clave"  value="${requestScope.persona.clave}"/>
                 </label>
                 <br>
-                <c:if test="${sessionScope.persona.perfil eq 'administrador'}">
+                <c:if test="${sessionScope.persona.perfil eq 'Administrador'}">
                     Activo<br>
                     <select class="select-label" name="activo">
                         <option ${(requestScope.persona.activo)?'selected':''}>Si</option>
