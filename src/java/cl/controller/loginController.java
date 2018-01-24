@@ -5,12 +5,14 @@
  */
 package cl.controller;
 
+import cl.beans.PersonaBeanLocal;
 import cl.model.IUtilidad;
 import cl.model.Persona;
 import java.io.IOException;
 import java.io.PrintWriter;
 import static java.lang.System.out;
 import java.util.List;
+import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -28,6 +30,9 @@ public class loginController extends HttpServlet {
 
     @Inject
     private IUtilidad utilidad;
+    
+    @EJB
+    private PersonaBeanLocal service;
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -57,14 +62,8 @@ public class loginController extends HttpServlet {
     protected void ingresar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String rut = request.getParameter("rut");
-        String clave = request.getParameter("clave");
-        
-        Persona persona;
-        List<Persona> lista = (List<Persona>) getServletContext().getAttribute("lista");
-
-        persona = utilidad.loguear(rut, clave, lista);
-        
-
+        String clave = request.getParameter("clave");        
+        Persona persona = service.loguear(rut, clave);        
         if (persona == null) {
             request.setAttribute("msg", "Usuario y/o clave incorrecta<br>");
         } else {
@@ -93,31 +92,26 @@ public class loginController extends HttpServlet {
         request.getRequestDispatcher("index.jsp").forward(request, response);
     }
     
+    // Este es modificarForm que hizo Roman
+    protected void procesaRut(HttpServletRequest request, HttpServletResponse response, String boton)
+            throws ServletException, IOException {
+        Persona p = service.buscar(boton);
+        request.setAttribute("persona", p);
+        request.getRequestDispatcher("registro.jsp").forward(request, response);
+    }
+    
     protected void modificar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String rut = request.getParameter("rut");       
-        String nombre = request.getParameter("nombre");               
-        String perfil = request.getParameter("perfil");               
-        String correo = request.getParameter("correo");               
-        String clave = request.getParameter("clave");
+        String rut = request.getParameter("rut");               
         String activo = request.getParameter("activo");       
-           
-        List<Persona> lista = (List<Persona>) getServletContext().getAttribute("lista");
-        Persona p = utilidad.buscar(rut, lista);
-        p.setNombre(nombre);
-        p.setPerfil(perfil);
-        p.setMail(correo);
-        p.setClave(clave);
-        p.setActivo(activo.equalsIgnoreCase("si"));
-        getServletContext().setAttribute("lista", lista);
-        response.sendRedirect("usuarios.jsp");
-                   
+                
+        service.editar(rut, activo.equalsIgnoreCase("si"));
     }
     
     protected void modificarForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String rut = request.getParameter("rut");                          
-        List<Persona> lista = (List<Persona>) getServletContext().getAttribute("lista");
+        List<Persona> lista = service.getPersonaList();
         for(Persona p : lista){
             if (p.getRut().equals(rut)) {
                 request.setAttribute("persona", p);

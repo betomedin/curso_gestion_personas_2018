@@ -2,7 +2,7 @@
 <nav class="">
     <div class="nav-wrapper container">
         <!--<a href="" class="brand-logo left">Sistema</a>-->
-        <c:if test="${ sessionScope.persona.perfil eq 'administrador'}">
+        <c:if test="${ sessionScope.persona.perfil eq 'Administrador'}">
             <ul id="nav-mobile" class=" hide-on-med-and-down">
                 <li><a href="index.jsp">Inicio</a></li>                                  
                 <li><a href="usuarios.jsp">Usuarios</a></li>                                  
