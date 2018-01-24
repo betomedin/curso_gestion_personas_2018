@@ -6,7 +6,6 @@
 package cl.controller;
 
 import cl.beans.PersonaBeanLocal;
-import cl.model.IUtilidad;
 import cl.model.Persona;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -28,9 +27,6 @@ import javax.swing.JOptionPane;
 @WebServlet(name = "loginController", urlPatterns = {"/control.do"})
 public class loginController extends HttpServlet {
 
-    @Inject
-    private IUtilidad utilidad;
-    
     @EJB
     private PersonaBeanLocal service;
 
