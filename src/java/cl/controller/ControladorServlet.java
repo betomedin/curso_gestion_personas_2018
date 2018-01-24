@@ -40,7 +40,7 @@ public class ControladorServlet extends HttpServlet {
     @Resource(mappedName = "jms/QueueFactory")
     private QueueConnectionFactory factory;
 
-    @Resource(mappedName = "jms/QueueFactory")
+    @Resource(mappedName = "jms/Queue")
     private Queue queue;
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -105,15 +105,7 @@ public class ControladorServlet extends HttpServlet {
             Logger.getLogger(ControladorServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
-    // Este es modificarForm que hizo Roman
-    protected void procesaRut(HttpServletRequest request, HttpServletResponse response, String boton)
-            throws ServletException, IOException {
-        Persona p = service.buscar(boton);
-        request.setAttribute("persona", p);
-        request.getRequestDispatcher("registro.jsp").forward(request, response);
-    }
-
+    
     protected void modificar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String rut = request.getParameter("rut");
