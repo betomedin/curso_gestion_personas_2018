@@ -8,27 +8,40 @@ package cl.controller;
 import cl.beans.PersonaBeanLocal;
 import cl.model.Persona;
 import java.io.IOException;
-import java.io.PrintWriter;
-import static java.lang.System.out;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
-import javax.inject.Inject;
+import javax.jms.Connection;
+import javax.jms.JMSException;
+import javax.jms.MapMessage;
+import javax.jms.MessageProducer;
+import javax.jms.Queue;
+import javax.jms.QueueConnectionFactory;
+import javax.jms.Session;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.swing.JOptionPane;
 
 /**
  *
  * @author betomedin
  */
-@WebServlet(name = "loginController", urlPatterns = {"/control.do"})
-public class loginController extends HttpServlet {
+@WebServlet(name = "ControladorServlet", urlPatterns = {"/control.do"})
+public class ControladorServlet extends HttpServlet {
 
     @EJB
     private PersonaBeanLocal service;
+
+    // Definición d einstancias para MDB
+    @Resource(mappedName = "jms/QueueFactory")
+    private QueueConnectionFactory factory;
+
+    @Resource(mappedName = "jms/QueueFactory")
+    private Queue queue;
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -58,8 +71,8 @@ public class loginController extends HttpServlet {
     protected void ingresar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String rut = request.getParameter("rut");
-        String clave = request.getParameter("clave");        
-        Persona persona = service.loguear(rut, clave);        
+        String clave = request.getParameter("clave");
+        Persona persona = service.loguear(rut, clave);
         if (persona == null) {
             request.setAttribute("msg", "Usuario y/o clave incorrecta<br>");
         } else {
@@ -71,23 +84,28 @@ public class loginController extends HttpServlet {
 
     protected void formRegistro(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         request.getRequestDispatcher("registro.jsp").forward(request, response);
     }
-    
+
     protected void registrar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String rut = request.getParameter("rut");
-        String nombre = request.getParameter("nombre");
-        String perfil = request.getParameter("perfil");
-        String clave = request.getParameter("clave");
-        String correo = request.getParameter("correo");
         
-        List<Persona> lista = (List<Persona>) getServletContext().getAttribute("lista");
-        lista.add(new Persona(rut, nombre, perfil, correo, clave, true));
-        request.getRequestDispatcher("index.jsp").forward(request, response);
+        try {
+            Connection conex = factory.createConnection();
+            Session sesion = conex.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            MessageProducer msgp = sesion.createProducer(queue);
+            MapMessage mensaje =  sesion.createMapMessage();
+            mensaje.setString("mensaje", "Hola desde el servlet");
+            msgp.send(mensaje);
+            msgp.close();
+            sesion.close();
+            conex.close();
+        } catch (JMSException ex) {
+            Logger.getLogger(ControladorServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
-    
+
     // Este es modificarForm que hizo Roman
     protected void procesaRut(HttpServletRequest request, HttpServletResponse response, String boton)
             throws ServletException, IOException {
@@ -95,26 +113,26 @@ public class loginController extends HttpServlet {
         request.setAttribute("persona", p);
         request.getRequestDispatcher("registro.jsp").forward(request, response);
     }
-    
+
     protected void modificar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String rut = request.getParameter("rut");               
-        String activo = request.getParameter("activo");       
-                
+        String rut = request.getParameter("rut");
+        String activo = request.getParameter("activo");
+
         service.editar(rut, activo.equalsIgnoreCase("si"));
         request.getRequestDispatcher("usuarios.jsp").forward(request, response);
     }
-    
+
     protected void modificarForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String rut = request.getParameter("rut");                          
+        String rut = request.getParameter("rut");
         List<Persona> lista = service.getPersonaList();
-        for(Persona p : lista){
+        for (Persona p : lista) {
             if (p.getRut().equals(rut)) {
                 request.setAttribute("persona", p);
                 request.getRequestDispatcher("registro.jsp").forward(request, response);
             }
-        }              
+        }
     }
 
 // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
